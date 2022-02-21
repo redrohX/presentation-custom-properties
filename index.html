@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/black.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-markdown>
+					<textarea data-template>
+					### Custom Properties
+					Also known as: CSS variables or cascading variables
+					---
+					Custom properties are entities that contain specific values to be reused throughout a document.
+					```css
+					:root {
+						--brand-color: #c0ffee;
+						--default-spacing: 2rem;
+					}
+					```
+					---
+					Reusable values
+					```css
+					.foo {
+						color: var(--brand-color);
+						margin: var(--default-spacing);
+						...
+					}
+
+					.bar {
+						color: var(--brand-color);
+						margin: var(--default-spacing);
+						...
+					}
+					```
+					---
+					This works too. But maybe don't do this.
+
+					```css
+					:root {
+						--☕: #c0ffee;
+						--🤘: #000;
+					}
+
+					.cup {
+						color: var(--☕);
+						background-color: var(--🤘);
+					}
+					```
+					---
+					Like other CSS, custom properties are subject to the cascade and inherit their value from their parent.
+					
+					```css
+					.foo {
+						color: var(--brand-color);
+					}
+
+					.foo .bar {
+						/* 
+							color value will be inherited from .foo
+							or can be overwritten in any way,
+							for example:
+							color: var(--secondary-color);
+						*/
+					}
+					```
+					---
+					### How do custom properties differ from Sass variables?
+					---
+					Sass variables can only be customized before processing Sass to CSS.
+
+					SCSS
+					```scss
+					$brand-color: #c0ffee;
+					
+					element {
+						color: $brand-color;
+					}
+					```
+
+					Processed to CSS
+					```css
+					element {
+						color: #c0ffee;
+					}
+					```
+					---
+					Custom properties are customizable in the browser devtools and even by JavaScript.
+
+					SCSS
+					```scss
+					--brand-color: #c0ffee;
+ 
+					element {
+						color: var(--brand-color);
+					}
+					```
+
+					Processed to CSS
+					```css
+					--brand-color: #c0ffee;
+ 
+					element {
+						color: var(--brand-color);
+					}
+					```
+					---
+					### Using custom properties
+					with Angular components or custom elements (also called web components)
+					---
+					Let's create a child-component with colored paragraphs
+
+					```css
+					/* child.component.css */
+					p {
+						color: #c0ffee;
+					}
+					```
+					---
+					It's not possible to change the color from a parent component because we are unable to pierce the boundary of the Shadow DOM.
+
+					```css
+					/* These selectors won't work */
+					child-component p {
+						color: #f00;
+					}
+
+					parent-component > child-component p {
+						color: #f00;
+					}
+					```
+					---
+					Why not use custom-properties?.
+
+					```css
+					--child-component-color: #000;
+
+					child-component {
+						color: var(--child-component-color);
+					}
+					```
+					This doesn't work due to specificity
+					```css					
+					parent-component {
+						--child-component-color: #f00;
+					}
+					```
+					---
+					Let's go back one step and use custom properties with default values.
+
+					```css
+					child-component {
+						color: var(--child-component-color, #000);
+					}
+					```
+					---
+					If there is no custom property with the name `--child-component-color`, it will use its default color.
+
+					```css
+					child-component {
+						color: var(--child-component-color, #000);
+						/* color value will be #000 */ 
+					}
+					```
+					---
+					Outside of the component we can use `--child-component-color` in a parent component to customize the property.
+
+					```css
+					parent-component {
+						--child-component-color: #c0ffee; 
+					}
+
+					.child-component { 
+						/* color value will be #c0ffee */
+					}
+					```
+					---
+					We can use a similar way to define spacing and layout in- and outside a reusable component.
+
+					```css
+					child-component .container { 
+						padding: var(--child-component-spacing, 0);
+					}
+
+					parent-component {
+						--child-component-spacing: 2rem;
+					}
+
+					other-parent-component {
+						--child-component-spacing: 3rem;
+					}
+					```
+					---
+					CSS Grid example
+
+					```css
+					child-component > .column { 
+						display: grid;
+						gap: var(--child-component-gap, 0);
+					}
+
+					parent-component {
+						--child-component-spacing: 2rem;
+					}
+					```
+					---
+					Text alignment
+
+					```css
+					child-component > p { 
+						text-align: var(--child-component-text-align, left);
+					}
+
+					parent-component {
+						--child-component-text-align: right;
+					}
+					```
+					---
+					We can even combine Sass variables and functions with custom properties.
+
+					```scss
+					// spacing(val) is a Sass function and returns a value 
+					// based on predefined t-shirt sizes
+					$default-spacing: spacing(sm); // 1.123rem
+
+					child-component {
+						padding: var(--child-component-spacing, #{$default-spacing});
+					}
+
+					parent-component {
+						// The spacing(md) function returns the correct 
+						// amount of spacing based on the set value.
+						--child-component-spacing: #{spacing(md)}; // 1.5rem
+					}
+					```
+					---
+					### Future usage of custom properties with `@property`. 
+
+					```scss
+					@property --property-name {
+						syntax: '<color>'; // Type checking
+						inherits: false; // Can it inherit values or not
+						initial-value: #c0ffee; // Set default values
+					}
+					```
+					---
+					`@property` allows developers to explicitly define their css custom properties.
+					- allowing for property type checking 
+					- setting default values 
+					- and define whether a property can inherit values or not.
+					---
+					Type checking with the `syntax` property
+					```CSS
+					syntax: '<color>'; /* accepts a color */
+					syntax: '<length> | <percentage>'; /* accepts lengths or percentages but not calc expressions with a combination of the two */
+					syntax: 'small | medium | large'; /* accepts one of these values set as custom idents. */
+					syntax: '*'; /* any valid token */
+					```
+					---
+					### Future: Using Shadow Parts to style web-components.
+					By using the `::part()` pseudo-element it allows you to select elements that have been exposed via a part attribute. 
+					
+					```html
+						<child-component><p part="foo">Text</p></child-component>
+					```
+					```scss
+					child-component::part(foo) {
+						color: #c0ffee;
+					}
+					```
+					---
+					### Any questions?
+					</textarea>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>
