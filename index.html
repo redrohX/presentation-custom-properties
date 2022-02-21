@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>Custom Properties</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
@@ -143,7 +143,9 @@
 					Why not use custom-properties?.
 
 					```css
-					--child-component-color: #000;
+					:host {
+						--child-component-color: #000;
+					}
 
 					child-component {
 						color: var(--child-component-color);
@@ -180,9 +182,7 @@
 						--child-component-color: #c0ffee; 
 					}
 
-					.child-component { 
-						/* color value will be #c0ffee */
-					}
+					/* The color inside the child-component will be #c0ffee */
 					```
 					---
 					We can use a similar way to define spacing and layout in- and outside a reusable component.
